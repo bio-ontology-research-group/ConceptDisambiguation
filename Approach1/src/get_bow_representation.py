@@ -3,6 +3,7 @@ import glob
 import numpy as np
 import pandas as pd
 
+
 from sklearn.feature_extraction.text import CountVectorizer
 
 # This function is responsible of building the stop words list.
@@ -17,18 +18,17 @@ def loadStopWords(dictionaryPath):
         dictionary = list(set(dictionary))
     return dictionary
 
-# This function perfoms the frequency analysis of groups documents. Then, it returns DataFrame which contains
+# This function perfoms the frequency analysis of groups documents. Then, it returnsa DataFrame which contains
 # the terms and their frequencies.
-def buildCorpusRepresentation(stopwords,corpusList):
-    if(corpusList):
+def buildCorpusRepresentation(stopwords,abstractPath):
+    if(abstractPath):
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
-        for abstractPath in corpusList:
-            for document in glob.iglob(abstractPath):
-                if(document):
-                    fp = open(document,"r");
-                    content = fp.read();
-                    fp.close()
-                    X = vectorizer.fit_transform([content]);
+        for document in glob.iglob(abstractPath):
+            if(document):
+                fp = open(document,"r");
+                content = fp.read();
+                fp.close()
+                X = vectorizer.fit_transform([content]);
         word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
         word_freq_df.sort_values(by = 'frequency',ascending = False)
         return(word_freq_df)
@@ -60,11 +60,37 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
 
 # It returns de feature matrix representation of all the documents. The matrix will contain per each document a vector
 # that will contain a feature vector of chemicals, diseases and genes.
-#def getFeatureMatrix():
-outPath = "../outputs/model_approach2.txt"
+#def getFeatureMatrix(threshold):
+threshold = 500;
+outPath="../outputs/model_approach1.txt"
 stopwords = loadStopWords("../resources/stopwords/stopwords.txt")
-corpusList =["../resources/abstracts/chemicals/*.txt","../resources/abstracts/diseases/*.txt","../resources/abstracts/genes/*.txt"]
-corpusRepresentation = buildCorpusRepresentation(stopwords,corpusList)
+chemicalVector = buildCorpusRepresentation(stopwords,"../resources/abstracts/chemicals/*.txt");
+if(chemicalVector.size<threshold):
+    slicedChemicalVector = chemicalVector
+else:
+    slicedChemicalVector = chemicalVector.iloc[:threshold]
+
+diseaseVector = buildCorpusRepresentation(stopwords,"../resources/abstracts/diseases/*.txt");
+if(diseaseVector.size<threshold):
+  slicedDiseaseVector = diseaseVector
+else:
+  slicedDiseaseVector = diseaseVector.iloc[:threshold]
+
+genesVector = buildCorpusRepresentation(stopwords,"../resources/abstracts/genes/*.txt")
+if(genesVector.size<threshold):
+  slicedGenesVector = genesVector
+else:
+  slicedGenesVector = genesVector[:threshold]
+
+#We concat the three DataFrames.
+print "Chemical vector length:"+str(len(slicedChemicalVector))
+print "Disease vector length:"+str(len(slicedDiseaseVector))
+print "Genes vector length:"+str(len(slicedGenesVector))
+
+corpusRepresentation = [slicedChemicalVector,slicedDiseaseVector,slicedGenesVector]
+corpusRepresentation = pd.concat(corpusRepresentation)
+
+print "Concatenation:"+str(len(corpusRepresentation))
+
 buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,"../resources/training/*.txt",outPath)
 #return featuresMatrix
-

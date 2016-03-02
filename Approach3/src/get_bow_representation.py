@@ -1,9 +1,24 @@
 import glob
 
+from cStringIO import StringIO
+
 import numpy as np
 import pandas as pd
+from cStringIO import StringIO
+from pdfminer.pdfinterp import PDFResourceManager, process_pdf
+from pdfminer.converter import TextConverter
+from pdfminer.layout import LAParams
 
 from sklearn.feature_extraction.text import CountVectorizer
+
+# This function is responsible of extracting the pdf content from files.
+def getPdfContent(pdfFile):
+    input_ = file(pdfFile, 'rb')
+    output = StringIO()
+    manager = PDFResourceManager()
+    converter = TextConverter(manager, output, laparams=LAParams())
+    process_pdf(manager, converter, input_)
+    return output.getvalue()
 
 # This function is responsible of building the stop words list.
 def loadStopWords(dictionaryPath):
@@ -17,7 +32,7 @@ def loadStopWords(dictionaryPath):
         dictionary = list(set(dictionary))
     return dictionary
 
-# This function perfoms the frequency analysis of groups documents. Then, it returns DataFrame which contains
+# This function perfoms the frequency analysis of groups documents. Then, it returnsa DataFrame which contains
 # the terms and their frequencies.
 def buildCorpusRepresentation(stopwords,corpusList):
     if(corpusList):
@@ -25,9 +40,7 @@ def buildCorpusRepresentation(stopwords,corpusList):
         for abstractPath in corpusList:
             for document in glob.iglob(abstractPath):
                 if(document):
-                    fp = open(document,"r");
-                    content = fp.read();
-                    fp.close()
+                    content = getPdfContent(document)
                     X = vectorizer.fit_transform([content]);
         word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
         word_freq_df.sort_values(by = 'frequency',ascending = False)
@@ -37,7 +50,7 @@ def buildCorpusRepresentation(stopwords,corpusList):
 def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath,outPath):
     #featuresMatrix =[]
     if ((not corpusRepresentation.empty) and (abstractPath)):
-        fOutput = open(outPath,"w")
+        fOutput = open(outPath,"wb")
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
         for document in glob.iglob(abstractPath):
             if(document):
@@ -61,9 +74,10 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
 # It returns de feature matrix representation of all the documents. The matrix will contain per each document a vector
 # that will contain a feature vector of chemicals, diseases and genes.
 #def getFeatureMatrix():
-outPath = "../outputs/model_approach2.txt"
+outPath = "../resources/outputs/model_approach1.txt"
+outPath = "../resources/outputs/model_approach2.txt"
 stopwords = loadStopWords("../resources/stopwords/stopwords.txt")
-corpusList =["../resources/abstracts/chemicals/*.txt","../resources/abstracts/diseases/*.txt","../resources/abstracts/genes/*.txt"]
+corpusList =["../resources/abstracts/chemicals/*.pdf","../resources/abstracts/diseases/*.pdf","../resources/abstracts/genes/*.pdf"]
 corpusRepresentation = buildCorpusRepresentation(stopwords,corpusList)
 buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,"../resources/training/*.txt",outPath)
 #return featuresMatrix
