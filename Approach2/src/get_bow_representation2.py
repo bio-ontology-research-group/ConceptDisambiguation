@@ -25,10 +25,14 @@ def buildCorpusRepresentation(stopwords,corpusList):
         for abstractPath in corpusList:
             for document in glob.iglob(abstractPath):
                 if(document):
-                    fp = open(document,"r");
-                    content = fp.read();
-                    fp.close()
-                    X = vectorizer.fit_transform([content]);
+                    try:
+                        fp = open(document,"r");
+                        content = fp.read();
+                        fp.close()
+                        if content:
+                            X = vectorizer.fit_transform([content]);
+                    except:
+                        print "Error trying to build corpus for the document: "+document
         word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
         word_freq_df.sort_values(by = 'frequency',ascending = False)
         return(word_freq_df)
@@ -41,20 +45,24 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
         for document in glob.iglob(abstractPath):
             if(document):
-                fp = open(document,"r");
-                content = fp.read();
-                fp.close()
-                vector = [];
-                #we split each document into tokens.
-                analyser = vectorizer.build_analyzer()
-                tokens = analyser(content);
-                for word in corpusRepresentation.term:
-                    if any(word in s for s in tokens):
-                        vector.append(1)
-                    else:
-                        vector.append(0)
-                #featuresMatrix.append(vector)
-                fOutput.write(" ".join(str(x) for x in vector)+"\n")
+                try:
+                    fp = open(document,"r");
+                    content = fp.read();
+                    fp.close()
+                    if content:
+                        vector = [];
+                        #we split each document into tokens.
+                        analyser = vectorizer.build_analyzer()
+                        tokens = analyser(content);
+                        for word in corpusRepresentation.term:
+                            if any(word in s for s in tokens):
+                                vector.append(1)
+                            else:
+                                vector.append(0)
+                        #featuresMatrix.append(vector)
+                        fOutput.write(" ".join(str(x) for x in vector)+"\n")
+                except:
+                    print "Error trying to build the representation for the document: "+document
         fOutput.close();
     #return(featuresMatrix)
 
