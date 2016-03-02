@@ -74,8 +74,7 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
 # It returns de feature matrix representation of all the documents. The matrix will contain per each document a vector
 # that will contain a feature vector of chemicals, diseases and genes.
 #def getFeatureMatrix():
-outPath = "../resources/outputs/model_approach1.txt"
-outPath = "../resources/outputs/model_approach2.txt"
+outPath = "../outputs/model_approach3.txt"
 stopwords = loadStopWords("../resources/stopwords/stopwords.txt")
 corpusList =["../resources/abstracts/chemicals/*.pdf","../resources/abstracts/diseases/*.pdf","../resources/abstracts/genes/*.pdf"]
 corpusRepresentation = buildCorpusRepresentation(stopwords,corpusList)
