@@ -60,7 +60,6 @@ def buildFeatureMatrixRepresentation(stopwords,chemicalsVector,diseasesVector,ge
                         #we split each document into tokens.
                         analyser = vectorizer.build_analyzer()
                         tokens = analyser(content);
-                        print chemicalsVector.size
                         for word in chemicalsVector.term:
                             if word!= " " and any(word in s for s in tokens):
                                 vector.append(1)
