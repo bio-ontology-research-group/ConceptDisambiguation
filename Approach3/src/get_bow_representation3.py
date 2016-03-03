@@ -11,6 +11,8 @@ from pdfminer.layout import LAParams
 
 from sklearn.feature_extraction.text import CountVectorizer
 
+MAX_NUM_DOCUMENTS = 1000
+
 # This function is responsible of extracting the pdf content from files.
 def getPdfContent(pdfFile):
     input_ = file(pdfFile, 'rb')
@@ -41,14 +43,14 @@ def buildCorpusRepresentation(stopwords,corpusList):
     if(corpusList):
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
         for abstractPath in corpusList:
-            for document in glob.iglob(abstractPath):
-                try:
-                    if(document):
+            for counter,document in enumerate(glob.iglob(abstractPath)):
+                if ((counter<MAX_NUM_DOCUMENTS) and (document)):
+                    try:
                         content = getPdfContent(document)
                         if content:
                             X = vectorizer.fit_transform([content])
-                except:
-                    print "Error trying to build corpus for the document: "+document
+                    except:
+                        print "Error trying to build corpus for the document: "+document
         word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
         word_freq_df.sort_values(by = 'frequency',ascending = False)
         return(word_freq_df)
@@ -59,8 +61,8 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
     if ((not corpusRepresentation.empty) and (abstractPath)):
         fOutput = open(outPath,"wb")
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
-        for document in glob.iglob(abstractPath):
-            if(document):
+        for counter,document in enumerate(glob.iglob(abstractPath)):
+            if ((counter<MAX_NUM_DOCUMENTS) and (document)):
                 try:
                     fp = open(document,"r");
                     content = fp.read();

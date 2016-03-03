@@ -5,6 +5,8 @@ import pandas as pd
 
 from sklearn.feature_extraction.text import CountVectorizer
 
+MAX_NUM_ABSTRACTS=13000
+
 # This function is responsible of building the stop words list.
 def loadStopWords(dictionaryPath):
     dictionary=[]
@@ -23,8 +25,8 @@ def buildCorpusRepresentation(stopwords,corpusList):
     if(corpusList):
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
         for abstractPath in corpusList:
-            for document in glob.iglob(abstractPath):
-                if(document):
+            for counter, document in enumerate(glob.iglob(abstractPath)):
+                if ((counter<MAX_NUM_ABSTRACTS) and (document)):
                     try:
                         fp = open(document,"r");
                         content = fp.read();
@@ -43,8 +45,8 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
     if ((not corpusRepresentation.empty) and (abstractPath)):
         fOutput = open(outPath,"w")
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
-        for document in glob.iglob(abstractPath):
-            if(document):
+        for counter,document in enumerate(glob.iglob(abstractPath)):
+            if ((counter<MAX_NUM_ABSTRACTS) and (document)):
                 try:
                     fp = open(document,"r");
                     content = fp.read();
