@@ -62,7 +62,7 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
         fOutput = open(outPath,"wb")
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
         for counter,document in enumerate(glob.iglob(abstractPath)):
-            if ((counter<MAX_NUM_DOCUMENTS) and (document)):
+            if (document):
                 try:
                     fp = open(document,"r");
                     content = fp.read();
