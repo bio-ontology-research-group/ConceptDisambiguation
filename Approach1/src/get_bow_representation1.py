@@ -7,7 +7,7 @@ import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
 
 MAX_NUM_ABSTRACTS=13000
-THRESHOLD = 1000;
+MAX_LENGTH_VECTOR = 1000;
 
 # This function is responsible of building the stop words list.
 def loadStopWords(dictionaryPath):
@@ -44,41 +44,42 @@ def buildCorpusRepresentation(stopwords,abstractPath):
         return(word_freq_df)
 
 # This function builds the feature vector representation for each document. Finally, it join all vector in a matrix.
-def buildFeatureMatrixRepresentation(stopwords,chemicalsVector,diseasesVector,genesVector,abstractPath,outPath):
+def buildFeatureMatrixRepresentation(stopwords,chemicalsVector,diseasesVector,genesVector,corpusList,outPath):
     #featuresMatrix =[]
-    if ((not chemicalsVector.empty) and (not diseasesVector.empty) and (not genesVector.empty) and (abstractPath)):
+    if ((not chemicalsVector.empty) and (not diseasesVector.empty) and (not genesVector.empty) and (corpusList)):
         fOutput = open(outPath,"w")
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
-        for counter,document in enumerate(glob.iglob(abstractPath)):
-            if ((counter<MAX_NUM_ABSTRACTS) and (document)):
-                try:
-                    fp = open(document,"r");
-                    content = fp.read();
-                    fp.close()
-                    if content:
-                        vector = [];
-                        #we split each document into tokens.
-                        analyser = vectorizer.build_analyzer()
-                        tokens = analyser(content);
-                        for word in chemicalsVector.term:
-                            if word!= " " and any(word in s for s in tokens):
-                                vector.append(1)
-                            else:
-                                vector.append(0)
-                        for word in diseasesVector.term:
-                            if word!= " " and any(word in s for s in tokens):
-                                vector.append(1)
-                            else:
-                                vector.append(0)
-                        for word in genesVector.term:
-                            if word!= " " and any(word in s for s in tokens):
-                                vector.append(1)
-                            else:
-                                vector.append(0)
-                        #featuresMatrix.append(vector)
-                        fOutput.write(" ".join(str(x) for x in vector)+"\n")
-                except:
-                    print "Error trying to build the representation for the document: "+document
+        for abstractPath in corpusList:
+            for counter,document in enumerate(glob.iglob(abstractPath)):
+                if ((counter<MAX_NUM_ABSTRACTS) and (document)):
+                    try:
+                        fp = open(document,"r");
+                        content = fp.read();
+                        fp.close()
+                        if content:
+                            vector = [];
+                            #we split each document into tokens.
+                            analyser = vectorizer.build_analyzer()
+                            tokens = analyser(content);
+                            for word in chemicalsVector.term:
+                                if word!= " " and any(word in s for s in tokens):
+                                    vector.append(1)
+                                else:
+                                    vector.append(0)
+                            for word in diseasesVector.term:
+                                if word!= " " and any(word in s for s in tokens):
+                                    vector.append(1)
+                                else:
+                                    vector.append(0)
+                            for word in genesVector.term:
+                                if word!= " " and any(word in s for s in tokens):
+                                    vector.append(1)
+                                else:
+                                    vector.append(0)
+                            #featuresMatrix.append(vector)
+                            fOutput.write(" ".join(str(x) for x in vector)+"\n")
+                    except:
+                        print "Error trying to build the representation for the document: "+document
         fOutput.close();
     #return(featuresMatrix)
 
@@ -89,36 +90,40 @@ outPath="../outputs/model_approach1.txt"
 stopwords = loadStopWords("../resources/stopwords/stopwords.txt")
 chemicalsVector = buildCorpusRepresentation(stopwords,"../resources/abstracts/chemicals/*.txt");
 # All vectors should have the same lenght, if not we fill up with zeros.
-if(THRESHOLD>chemicalsVector.size):
-    size = (THRESHOLD-chemicalsVector.size)/2
+
+#We divide by 2 because the representation vector contains 2 rows: terms | frequency
+if(MAX_LENGTH_VECTOR>(chemicalsVector.size/2)):
+    size = (MAX_LENGTH_VECTOR-(chemicalsVector.size/2))
     zeros = pd.DataFrame({'term': [" "]*size , 'frequency':np.zeros(size)})
     slicedChemicalsVector = [chemicalsVector,zeros]
     slicedChemicalsVector = pd.concat(slicedChemicalsVector)
 else:
-    slicedChemicalsVector = chemicalsVector.iloc[:THRESHOLD]
+    slicedChemicalsVector = chemicalsVector.iloc[:MAX_LENGTH_VECTOR]
 
 diseasesVector = buildCorpusRepresentation(stopwords,"../resources/abstracts/diseases/*.txt");
-if(THRESHOLD>diseasesVector.size):
-    size = (THRESHOLD-diseasesVector.size)/2
+if(MAX_LENGTH_VECTOR>(diseasesVector.size/2)):
+    size = (MAX_LENGTH_VECTOR-(diseasesVector.size/2))
     zeros = pd.DataFrame({'term': [" "]*size, 'frequency':np.zeros(size)})
     slicedDiseasesVector = [diseasesVector,zeros]
     slicedDiseasesVector = pd.concat(slicedDiseasesVector)
 else:
-    slicedDiseasesVector = diseasesVector.iloc[:THRESHOLD]
+    slicedDiseasesVector = diseasesVector.iloc[:MAX_LENGTH_VECTOR]
 
 genesVector = buildCorpusRepresentation(stopwords,"../resources/abstracts/genes/*.txt")
-if(THRESHOLD>genesVector.size):
-    size = (THRESHOLD-genesVector.size)/2
+if(MAX_LENGTH_VECTOR>(genesVector.size/2)):
+    size = (MAX_LENGTH_VECTOR-(genesVector.size/2))
     zeros = pd.DataFrame({'term': [" "]*size, 'frequency':np.zeros(size)})
     slicedGenesVector = [genesVector,zeros]
     slicedGenesVector = pd.concat(slicedGenesVector)
 else:
-    slicedGenesVector = genesVector[:THRESHOLD]
+    slicedGenesVector = genesVector[:MAX_LENGTH_VECTOR]
 
-print "The lenght of chemicals vector: "+str(slicedChemicalsVector.size)
-print "The length of diseases vector: "+str(slicedDiseasesVector.size)
-print "The lenght of genes vector: "+str(slicedGenesVector.size)
+#We divide by two in order to consider the quantity of terms.
+print "The length of chemicals vector: "+str(slicedChemicalsVector.size/2)
+print "The length of diseases vector: "+str(slicedDiseasesVector.size/2)
+print "The length of genes vector: "+str(slicedGenesVector.size/2)
 
 #We concat the three DataFrames.
-buildFeatureMatrixRepresentation(stopwords,slicedChemicalsVector,slicedDiseasesVector,slicedGenesVector,"../resources/training/*.txt",outPath)
+corpusList =["../resources/abstracts/chemicals/*.txt","../resources/abstracts/diseases/*.txt","../resources/abstracts/genes/*.txt"]
+buildFeatureMatrixRepresentation(stopwords,slicedChemicalsVector,slicedDiseasesVector,slicedGenesVector,corpusList,outPath)
 #return featuresMatrix
