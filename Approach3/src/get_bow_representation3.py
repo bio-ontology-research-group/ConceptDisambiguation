@@ -42,17 +42,20 @@ def loadStopWords(dictionaryPath):
 def buildCorpusRepresentation(stopwords,corpusList):
     if(corpusList):
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
+        corpus=[]
         for abstractPath in corpusList:
             for counter,document in enumerate(glob.iglob(abstractPath)):
                 if ((counter<MAX_NUM_DOCUMENTS) and (document)):
                     try:
                         content = getPdfContent(document)
                         if content:
-                            X = vectorizer.fit_transform([content])
+                            corpus.append(content);
                     except:
                         print "Error trying to build corpus for the document: "+document
-        word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
-        word_freq_df.sort_values(by = 'frequency',ascending = False)
+        if corpus:
+            X = vectorizer.fit_transform(corpus);
+            word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
+            word_freq_df.sort_values(by = 'frequency',ascending = False)
         return(word_freq_df)
 
 # This function builds the feature vector representation for each document. Finally, it join all vector in a matrix.
