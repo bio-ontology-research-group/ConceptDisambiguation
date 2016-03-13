@@ -39,7 +39,7 @@ def buildCorpusRepresentation(stopwords,corpusList):
         if corpus:
             X = vectorizer.fit_transform(corpus);
             word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
-            word_freq_df.sort_values(by = 'frequency',ascending = False)
+            word_freq_df = word_freq_df.sort_values(by = 'frequency',ascending = False)
         return(word_freq_df)
 
 # This function builds the feature vector representation for each document. Finally, it join all vector in a matrix.

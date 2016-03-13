@@ -64,19 +64,29 @@ def buildFeatureMatrixRepresentation(stopwords,chemicalsVector,diseasesVector,ge
                             #we split each document into tokens.
                             analyser = vectorizer.build_analyzer()
                             tokens = analyser(content);
-                            for word in chemicalsVector.term:
+                            #for word in chemicalsVector.term:
+                            for record in enumerate(chemicalsVector.values):
+                                freq = record[1][0]
+                                word = record[1][1]
                                 if word!= " " and any(word in s for s in tokens):
-                                    vector.append(1)
+                                    vector.append(freq)
                                 else:
                                     vector.append(0)
-                            for word in diseasesVector.term:
+                            #for word in diseasesVector.term:
+                            for record in enumerate(diseasesVector.values):
+                                freq = record[1][0]
+                                word = record[1][1]
                                 if word!= " " and any(word in s for s in tokens):
-                                    vector.append(1)
+                                    vector.append(freq)
                                 else:
                                     vector.append(0)
-                            for word in genesVector.term:
+
+                            #for word in genesVector.term:
+                            for record in enumerate(genesVector.values):
+                                freq = record[1][0]
+                                word = record[1][1]
                                 if word!= " " and any(word in s for s in tokens):
-                                    vector.append(1)
+                                    vector.append(freq)
                                 else:
                                     vector.append(0)
                             #featuresMatrix.append(vector)
@@ -89,7 +99,7 @@ def buildFeatureMatrixRepresentation(stopwords,chemicalsVector,diseasesVector,ge
 # It returns de feature matrix representation of all the documents. The matrix will contain per each document a vector
 # that will contain a feature vector of chemicals, diseases and genes.
 #def getFeatureMatrix(threshold):
-outPath="../outputs/model_approach1.txt"
+outPath="../outputs/model_approach1Frequency.txt"
 stopwords = loadStopWords("../resources/stopwords/stopwords.txt")
 chemicalsVector = buildCorpusRepresentation(stopwords,"../resources/abstracts/chemicals/*.txt");
 # All vectors should have the same lenght, if not we fill up with zeros.
