@@ -29,19 +29,19 @@ def loadStopWords(dictionaryPath):
 def buildCorpusRepresentation(stopwords,abstractPath):
     if(abstractPath):
         vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
-        corpus=[]
+	corpus=[]
         for counter,document in enumerate(glob.iglob(abstractPath)):
             if ((counter<MAX_NUM_ABSTRACTS) and (document)):
                 try:
                     fp = open(document,"r");
                     content = fp.read();
                     fp.close()
-                    if content:
-                        corpus.append(content)
+		    if content:
+                    	corpus.append(content)
                 except:
                     print "Error trying to build corpus for the document: "+document
-        if corpus:
-            X = vectorizer.fit_transform(corpus)
+	if corpus:
+	    X = vectorizer.fit_transform(corpus)
             word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
             word_freq_df = word_freq_df.sort_values(by = 'frequency',ascending = False)
         return(word_freq_df)
@@ -64,27 +64,23 @@ def buildFeatureMatrixRepresentation(stopwords,chemicalsVector,diseasesVector,ge
                             #we split each document into tokens.
                             analyser = vectorizer.build_analyzer()
                             tokens = analyser(content);
-                            #for word in chemicalsVector.term:
                             for record in enumerate(chemicalsVector.values):
-                                freq = record[1][0]
-                                word = record[1][1]
+				freq = record[1][0]
+				word = record[1][1]	
                                 if word!= " " and any(word in s for s in tokens):
                                     vector.append(freq)
                                 else:
                                     vector.append(0)
-                            #for word in diseasesVector.term:
                             for record in enumerate(diseasesVector.values):
-                                freq = record[1][0]
-                                word = record[1][1]
+				freq = record[1][0]
+				word = record[1][1]
                                 if word!= " " and any(word in s for s in tokens):
                                     vector.append(freq)
                                 else:
                                     vector.append(0)
-
-                            #for word in genesVector.term:
                             for record in enumerate(genesVector.values):
-                                freq = record[1][0]
-                                word = record[1][1]
+				freq = record[1][0]
+				word = record[1][1]
                                 if word!= " " and any(word in s for s in tokens):
                                     vector.append(freq)
                                 else:
@@ -99,7 +95,7 @@ def buildFeatureMatrixRepresentation(stopwords,chemicalsVector,diseasesVector,ge
 # It returns de feature matrix representation of all the documents. The matrix will contain per each document a vector
 # that will contain a feature vector of chemicals, diseases and genes.
 #def getFeatureMatrix(threshold):
-outPath="../outputs/model_approach1Frequency.txt"
+outPath="../outputs/model_approach_frequency_1_1K.txt"
 stopwords = loadStopWords("../resources/stopwords/stopwords.txt")
 chemicalsVector = buildCorpusRepresentation(stopwords,"../resources/abstracts/chemicals/*.txt");
 # All vectors should have the same lenght, if not we fill up with zeros.
@@ -137,6 +133,6 @@ print "The length of diseases vector: "+str(slicedDiseasesVector.size/2)
 print "The length of genes vector: "+str(slicedGenesVector.size/2)
 
 #We concat the three DataFrames.
-corpusList =["../resources/abstracts/chemicals/*.txt","../resources/abstracts/diseases/*.txt","../resources/abstracts/genes/*.txt"]
+corpusList =["../../../GetAbstracts/resources/abstracts/chemicals/*.txt","../../../GetAbstracts/resources/abstracts/diseases/*.txt","../../../GetAbstracts/resources/abstracts/genes/*.txt"]
 buildFeatureMatrixRepresentation(stopwords,slicedChemicalsVector,slicedDiseasesVector,slicedGenesVector,corpusList,outPath)
 #return featuresMatrix

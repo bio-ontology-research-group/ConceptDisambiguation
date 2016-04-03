@@ -1,0 +1,7 @@
+Chemicals length:167104
+Diseases length:129966
+Genes length:162601
+Traceback (most recent call last):
+  File "get_bow_reduced_representation1.py", line 125, in <module>
+    chemicalsVector,diseasesVector,genesVector = refineVector(chemicalsVector,diseasesVector,genesVector)
+ValueError: need more than 2 values to unpack

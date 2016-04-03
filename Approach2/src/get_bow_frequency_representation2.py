@@ -43,13 +43,14 @@ def buildCorpusRepresentation(stopwords,corpusList):
             word_freq_df = word_freq_df.sort_values(by = 'frequency',ascending = False)
         return(word_freq_df)
 
-
 # This function builds the feature vector representation for each document. Finally, it join all vector in a matrix.
-def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath,outPath):
+def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,corpusList,outPath):
     #featuresMatrix =[]
-    if ((not corpusRepresentation.empty) and (abstractPath)):
+    if ((not corpusRepresentation.empty) and (corpusList)):
         fOutput = open(outPath,"w")
-        vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b')
+        vectorizer = CountVectorizer(lowercase=True,stop_words=stopwords,min_df=0,token_pattern='(?u)\\b[\\w+,-]+\\w+\\b|\\b\\w\\w+\\b',
+                                     vocabulary=corpusRepresentation.term.tolist())
+        fOutput.write(" ".join(x.encode("utf8") for x in corpusRepresentation.term.tolist())+"\n")
         for abstractPath in corpusList:
             for counter,document in enumerate(glob.iglob(abstractPath)):
                 if ((counter<MAX_NUM_ABSTRACTS) and (document)):
@@ -58,17 +59,10 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
                         content = fp.read();
                         fp.close()
                         if content:
-                            vector = [];
-                            #we split each document into tokens.
-                            analyser = vectorizer.build_analyzer()
-                            tokens = analyser(content);
-                            for word in corpusRepresentation.term:
-                                if any(word in s for s in tokens):
-                                    vector.append(1)
-                                else:
-                                    vector.append(0)
-                            #featuresMatrix.append(vector)
-                            fOutput.write(" ".join(str(x) for x in vector)+"\n")
+                            vector = np.zeros(len(vectorizer.vocabulary));
+                            X = vectorizer.fit_transform([content])
+                            word_freq_df = pd.DataFrame({'term': vectorizer.get_feature_names(), 'frequency':np.asarray(X.sum(axis=0)).ravel().tolist()})
+                            fOutput.write(" ".join(str(x) for x in word_freq_df.frequency.tolist())+"\n")
                     except:
                         print "Error trying to build the representation for the document: "+document
         fOutput.close();
@@ -77,7 +71,7 @@ def buildFeatureMatrixRepresentation(stopwords,corpusRepresentation,abstractPath
 # It returns de feature matrix representation of all the documents. The matrix will contain per each document a vector
 # that will contain a feature vector of chemicals, diseases and genes.
 #def getFeatureMatrix():
-outPath = "../outputs/model_approach2_v2.txt"
+outPath = "../outputs/model_approach_frequency_2.txt"
 stopwords = loadStopWords("../resources/stopwords/stopwords.txt")
 corpusList =["../resources/abstracts/chemicals/*.txt","../resources/abstracts/diseases/*.txt","../resources/abstracts/genes/*.txt"]
 corpusRepresentation = buildCorpusRepresentation(stopwords,corpusList)

@@ -1,0 +1,9 @@
+Chemicals length:167104
+Diseases length:129966
+Genes length:162601
+Chemicals length:111880
+Diseases length:79143
+Genes length:106171
+The length of chemicals vector: 1000
+The length of diseases vector: 1000
+The length of genes vector: 1000

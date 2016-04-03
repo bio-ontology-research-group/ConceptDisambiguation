@@ -1,0 +1,3 @@
+The length of chemicals vector: 2000
+The length of diseases vector: 2000
+The length of genes vector: 2000
